@@ -10,6 +10,7 @@
 * [@wikisext](http://twitter.com/wikisext)
 * [@twoheadlines](http://twitter.com/twoheadlines)
 * [@metaphorminute](http://twitter.com/metaphorminute)
+* [@everyword](http://twitter.com/everyword)
 * [@fantasticvocab](http://twitter.com/fantasticvocab)
 * [@uncannyxbot](http://twitter.com/uncannyxbot)
 * [@oliviataters](http://twitter.com/oliviataters)
