@@ -1,7 +1,9 @@
 <html>
   <head>
+      <link rel="stylesheet" href="js/codemirror-4.12/codemirror.css">
+      <script type="text/javascript" src="js/codemirror-4.12/codemirror.js"></script>
       <script type="text/javascript" src="js/jspos-0.2.2/lexer.js"></script>
-      <script type="text/javascript" src="js/jspos-0.2.2/lexicon.js_"></script>
+      <script type="text/javascript" src="js/jspos-0.2.2/lexicon.js"></script>
       <script type="text/javascript" src="js/jspos-0.2.2/POSTagger.js"></script>
       <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
 
@@ -30,6 +32,14 @@
           }
           $("#pos-output").html(result);
         });
+
+        $("textarea.editor").each(function(idx, e) {
+            console.log(e);
+            var config = {
+              lineNumbers: true,
+            }
+            var editor = CodeMirror.fromTextArea(e, config);
+        });
       }
 
       document.addEventListener("DOMContentLoaded", ready, false);
@@ -39,7 +49,7 @@
   </head>
   <body>
     <form id="pos" action="#">
-      <textarea cols=40 rows=5>Roses are red, violets are blue.</textarea>
+      <textarea class="editor" cols=40 rows=5>Roses are red, violets are blue.</textarea>
       <p id="pos-output"></p>
       <p><input type="submit" value="tag" /></p>
     </form>
