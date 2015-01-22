@@ -1,0 +1,7 @@
+#toplevel-controls {
+  float: right;
+}
+
+#toplevel-controls .caution {
+  background-color: #d30;
+}
