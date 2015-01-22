@@ -5,6 +5,8 @@
       <script type="text/javascript" src="js/jspos-0.2.2/lexer.js"></script>
       <script type="text/javascript" src="js/jspos-0.2.2/lexicon.js"></script>
       <script type="text/javascript" src="js/jspos-0.2.2/POSTagger.js"></script>
+      <script type="text/javascript" src="js/markov.js"></script>
+
       <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
 
       <script type="text/javascript">
@@ -20,6 +22,21 @@
           return result;
         }
 
+        function markovTrainAndGenerate(string){
+          markov = new Markov(string, 5);
+          results = [""];
+
+          markov.each(function(t){
+            if(results[results.length-1].length <= 140){
+              results[results.length-1] += t;
+            }else {
+              results.push(t);
+            }
+          })
+
+          return results;
+        }
+
         $("#pos").submit(function(e){
           e.preventDefault();
           var inputText = $("#pos textarea").val();
@@ -31,6 +48,16 @@
             result = result + tags[i].word + " (" + tags[i].pos + ") ";
           }
           $("#pos-output").html(result);
+        });
+
+        $("#markov").submit(function(e){
+          e.preventDefault();
+          var corpus = $("#markov textarea").val();
+          output = markovTrainAndGenerate(corpus);
+          $("#markov-output").empty();
+          for(var i = 0; i < output.length; i++){
+            $("#markov-output").append("<li>" + output[i] + "</li>");
+          }
         });
 
         $("textarea.editor").each(function(idx, textarea) {
@@ -53,9 +80,22 @@
       document.addEventListener("DOMContentLoaded", ready, false);
 
 </script>
+<style>
+#markov li{
+  white-space: pre;
+}
+</style>
 
   </head>
   <body>
+    <h2>Markov chains</h2>
+    <form id="markov" action="#">
+      <textarea class="editor" cols=40 rows=5>Your corpus here.</textarea>
+      <p><input type="submit" value="train and generate" /></p>
+      <ul id="markov-output"></ul>
+    </form>
+
+    <h2>Part of Speech Tagging</h2>
     <form id="pos" action="#">
       <textarea class="editor" cols=40 rows=5>Roses are red, violets are blue.</textarea>
       <p id="pos-output"></p>

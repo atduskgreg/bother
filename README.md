@@ -4,6 +4,8 @@
 
 * [jspos](https://code.google.com/p/jspos) - Part of Speech Tagging library
 
+* [yuya-takeyama/Markov-Chain-in-JavaScript](https://github.com/yuya-takeyama/Markov-Chain-in-JavaScript) - Markov chain library
+
 ### Bot Syllabus
 
 * [@onlymanthings](http://twitter.com/onlymanthings)
