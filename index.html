@@ -29,12 +29,22 @@
           markov.each(function(t){
             if(results[results.length-1].length <= 140){
               results[results.length-1] += t;
-            }else {
+            } else {
               results.push(t);
             }
           })
 
           return results;
+        }
+
+        function fetch(url){
+          $.ajax({
+            url: url,
+            dataType: "jsonp",
+            success: function (data) {
+              console.log(data)
+            }
+          });
         }
 
         $("#pos").submit(function(e){
