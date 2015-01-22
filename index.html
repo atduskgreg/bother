@@ -33,12 +33,20 @@
           $("#pos-output").html(result);
         });
 
-        $("textarea.editor").each(function(idx, e) {
-            console.log(e);
+        $("textarea.editor").each(function(idx, textarea) {
             var config = {
               lineNumbers: true,
             }
-            var editor = CodeMirror.fromTextArea(e, config);
+
+            var editor = CodeMirror.fromTextArea(textarea, config);
+            var e = $(textarea);
+
+            editor.on("changes", function() {
+              // accoding to the docs this should work, but...nope!
+              //editor.save();
+              // so we do it the manual way
+              e.text(editor.getValue());
+            });
         });
       }
 
