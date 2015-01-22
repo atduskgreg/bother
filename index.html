@@ -1,53 +1,50 @@
 <html>
-	<head>
-  			<script type="text/javascript" src="/js/jspos-0.2.2/lexer.js"></script>
-			<script type="text/javascript" src="/js/jspos-0.2.2/lexicon.js_"></script>
-			<script type="text/javascript" src="/js/jspos-0.2.2/POSTagger.js"></script>
-			<script type="text/javascript" src="/js/jquery-1.11.2.min.js"></script>
+  <head>
+      <script type="text/javascript" src="js/jspos-0.2.2/lexer.js"></script>
+      <script type="text/javascript" src="js/jspos-0.2.2/lexicon.js_"></script>
+      <script type="text/javascript" src="js/jspos-0.2.2/POSTagger.js"></script>
+      <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
 
-			<script type="text/javascript">
+      <script type="text/javascript">
 
-			function ready(){
-				function tagPos(string){
-					var words = new Lexer().lex(string);
-					var taggedWords = new POSTagger().tag(words);
-					var result = []
-					for(var i = 0; i < taggedWords.length; i++){
-						result.push({word : taggedWords[i][0], pos: taggedWords[i][1]});
-					}
-					return result;
-				}
+      function ready(){
+        function tagPos(string){
+          var words = new Lexer().lex(string);
+          var taggedWords = new POSTagger().tag(words);
+          var result = []
+          for(var i = 0; i < taggedWords.length; i++){
+            result.push({word : taggedWords[i][0], pos: taggedWords[i][1]});
+          }
+          return result;
+        }
 
-				$("#pos").submit(function(e){
-					e.preventDefault();
-					var inputText = $("#pos textarea").val();
+        $("#pos").submit(function(e){
+          e.preventDefault();
+          var inputText = $("#pos textarea").val();
 
-					var tags = tagPos(inputText);
+          var tags = tagPos(inputText);
 
-					var result = "";
-					for(var i = 0; i < tags.length; i++){
-						result = result + tags[i].word + " (" + tags[i].pos + ") ";
-					}
-					$("#pos-output").html(result);
-				});
+          var result = "";
+          for(var i = 0; i < tags.length; i++){
+            result = result + tags[i].word + " (" + tags[i].pos + ") ";
+          }
+          $("#pos-output").html(result);
+        });
+      }
 
-				
-
-			}
-
-			document.addEventListener("DOMContentLoaded", ready, false);
+      document.addEventListener("DOMContentLoaded", ready, false);
 
 </script>
 
-	</head>
-	<body>
-		<form id="pos" action="#">
-			<textarea cols=40 rows=5>Roses are red, violets are blue.</textarea>
-			<p id="pos-output"></p>
-			<p><input type="submit" value="tag" /></p>
-		</form>
-		<div id="pos-defs">
-			<p>(via <a href="http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html">upenn</a>, standard NLP notation)
+  </head>
+  <body>
+    <form id="pos" action="#">
+      <textarea cols=40 rows=5>Roses are red, violets are blue.</textarea>
+      <p id="pos-output"></p>
+      <p><input type="submit" value="tag" /></p>
+    </form>
+    <div id="pos-defs">
+      <p>(via <a href="http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html">upenn</a>, standard NLP notation)
 
 <ul>
 <li>CC Coordinating conjunction
@@ -87,6 +84,6 @@
 </li><li>WP$ Possessive wh-pronoun
 </li><li>WRB Wh-adverb</li>
 </ul>
-	</body>
+  </body>
 
 </html>
