@@ -1,15 +1,48 @@
 <html>
   <head>
       <link rel="stylesheet" href="js/codemirror-4.12/codemirror.css">
-      <script type="text/javascript" src="js/codemirror-4.12/codemirror.js"></script>
+      <link rel="stylesheet" href="style.css">
+
       <script type="text/javascript" src="js/jspos-0.2.2/lexer.js"></script>
       <script type="text/javascript" src="js/jspos-0.2.2/lexicon.js"></script>
       <script type="text/javascript" src="js/jspos-0.2.2/POSTagger.js"></script>
       <script type="text/javascript" src="js/markov.js"></script>
 
+      <script type="text/javascript" src="js/codemirror-4.12/codemirror-min.js"></script>
+
       <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
 
+      <script type="text/javascript" src="js/underscore-1.7.0/underscore-min.js"></script>
+      <script type="text/javascript" src="js/persistent.js"></script>
+
       <script type="text/javascript">
+
+      const PERSIST_PREFIX = "_bother_storage_";
+      const DATA = new PersistentMap(PERSIST_PREFIX);
+
+      function clearAllChanges() {
+        if(confirm("Are you sure? All edits to your corpus text and code will be lost!")) {
+          DATA.reallyClearIMeanIt();
+          location.reload();
+        }
+      }
+
+      // LOLOLOL
+      function compileFunction(params, body) {
+        var proto = params.join(", ");
+        var header = "var _internal = function(" + proto + ") {\n";
+        var footer = "\n};\n_internal;";
+        var code = header + body + footer;
+        var func = undefined;
+
+        try {
+          func = eval(code);
+        } catch (e) {
+          console.error("Could not compile JS code:\n" + code);
+        }
+
+        return func;
+      }
 
       function ready(){
         function tagPos(string){
@@ -70,19 +103,42 @@
           }
         });
 
+        $("#scratch").submit(function (e) {
+          e.preventDefault();
+
+          var source = $("#scratch #js-scratch").text();
+          var func = compileFunction([], source);
+          func();
+        });
+
         $("textarea.editor").each(function(idx, textarea) {
             var config = {
               lineNumbers: true,
             }
 
-            var editor = CodeMirror.fromTextArea(textarea, config);
             var e = $(textarea);
+            var eId = e.attr("id");
+
+            // see if we've persisted changes to this field
+            if (eId && DATA.hasKey(eId)) {
+              e.text(DATA.get(eId));
+            }
+
+            var editor = CodeMirror.fromTextArea(textarea, config);
+
+            if (e.attr("data-mode")) {
+              editor.setOption("mode", e.attr("data-mode"));
+            }
 
             editor.on("changes", function() {
               // accoding to the docs this should work, but...nope!
               //editor.save();
               // so we do it the manual way
-              e.text(editor.getValue());
+              var value = editor.getValue();
+              e.text(value);
+              if (eId) {
+                DATA.set(eId, value);
+              }
             });
         });
       }
@@ -98,16 +154,27 @@
 
   </head>
   <body>
+    <form id="toplevel-controls" action="#">
+      <input type="button" class="caution" onclick="clearAllChanges()" value="clear all changes"/>
+    </form>
+
+    <h2>JavaScript scratchpad</h2>
+    <form id="scratch" action="#">
+      <textarea id="js-scratch" class="editor" data-mode="javascript">alert(1)</textarea>
+      <p><input type="submit" value="evaluate"></p>
+      <p id="scratch-output"></p>
+    </form>
+
     <h2>Markov chains</h2>
     <form id="markov" action="#">
-      <textarea class="editor" cols=40 rows=5>Your corpus here.</textarea>
+      <textarea id="markov-corpus" class="editor" cols=40 rows=5>Your corpus here.</textarea>
       <p><input type="submit" value="train and generate" /></p>
       <ul id="markov-output"></ul>
     </form>
 
     <h2>Part of Speech Tagging</h2>
     <form id="pos" action="#">
-      <textarea class="editor" cols=40 rows=5>Roses are red, violets are blue.</textarea>
+      <textarea id="pos-corpus" class="editor" cols=40 rows=5>Roses are red, violets are blue.</textarea>
       <p id="pos-output"></p>
       <p><input type="submit" value="tag" /></p>
     </form>
