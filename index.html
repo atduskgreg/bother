@@ -8,18 +8,25 @@
 			<script type="text/javascript">
 
 			function ready(){
+				function tagPos(string){
+					var words = new Lexer().lex(string);
+					var taggedWords = new POSTagger().tag(words);
+					var result = []
+					for(var i = 0; i < taggedWords.length; i++){
+						result.push({word : taggedWords[i][0], pos: taggedWords[i][1]});
+					}
+					return result;
+				}
+
 				$("#pos").submit(function(e){
 					e.preventDefault();
 					var inputText = $("#pos textarea").val();
-					var words = new Lexer().lex(inputText);
-					var taggedWords = new POSTagger().tag(words);
-					console.log(taggedWords);
+
+					var tags = tagPos(inputText);
 
 					var result = "";
-					for(var i = 0; i < taggedWords.length; i++){
-						originalWord = taggedWords[i][0];
-						pos = taggedWords[i][1];
-						result = result + originalWord + " (" + pos + ") "
+					for(var i = 0; i < tags.length; i++){
+						result = result + tags[i].word + " (" + tags[i].pos + ") ";
 					}
 					$("#pos-output").html(result);
 				});
