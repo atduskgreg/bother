@@ -5,3 +5,15 @@
 #toplevel-controls .caution {
   background-color: #d30;
 }
+
+ul.tweet-list {
+  list-style: none;
+}
+
+.btn-cancel {
+  background-color: #e60;
+}
+
+.btn-tweet {
+  background-color: #09d;
+}
