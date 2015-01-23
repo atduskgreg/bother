@@ -47,7 +47,26 @@
             }
           })
 
+          console.log("generated " + results.length + " results from markov chain");
+
+          // return a random "page" (50 results) from full result array
+          const pageSize = 50;
+          var pageCount = Math.floor(results.length / pageSize);
+          if (pageCount > 1) {
+            randomPage = Math.floor(Math.random() * pageCount);
+            console.log(pageCount + " pages generated; choosing page " + randomPage);
+            offset = pageSize * randomPage;
+            results = results.slice(offset, offset+pageSize);
+          }
+
           return results;
+        },
+
+        renderTweets: function(tweetList) {
+          var el = $("#candidate-tweets");
+          _.each(tweetList, function(tweetText) {
+            el.append(candidateTweet(tweetText));
+          });
         },
 
         fetch : function(url, callback){
@@ -107,7 +126,6 @@
             $("#corpora-output").html(JSON.stringify(data));
           });
         });
-        
 
         $("#pos").submit(function(e){
           e.preventDefault();
@@ -127,10 +145,7 @@
           var corpus = $("#markov textarea").val();
           output = Tools.markovTrainAndGenerate(corpus);
           $("#markov-output").empty();
-          for(var i = 0; i < output.length; i++){
-            var tweet = candidateTweet(output[i]);
-            $("#markov-output").append(tweet);
-          }
+          Tools.renderTweets(output);
         });
 
         $("#scratch").submit(function (e) {
@@ -177,18 +192,20 @@
 
       document.addEventListener("DOMContentLoaded", ready, false);
 
-</script>
-<style>
-#markov li{
-  white-space: pre;
-}
-</style>
-
+      </script>
   </head>
+
   <body>
     <form id="toplevel-controls" action="#">
       <input type="button" class="caution" onclick="clearAllChanges()" value="clear all changes"/>
     </form>
+
+    <div id="right-gutter">
+      <h2>Candidate Tweets</h2>
+      <ul id="candidate-tweets" class="tweet-list">
+        <li>Use <tt>Tools.renderTweets(...)</tt> to populate this list</li>
+      </ul>
+    </div>
 
     <h2>JavaScript scratchpad</h2>
     <form id="scratch" action="#">

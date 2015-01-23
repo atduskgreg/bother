@@ -6,8 +6,17 @@
   background-color: #d30;
 }
 
+#right-gutter {
+  float: right;
+  width: 250px;
+}
+
 ul.tweet-list {
   list-style: none;
+}
+
+ul.tweet-list li {
+  margin-top: 0.5em;
 }
 
 .btn-cancel {
