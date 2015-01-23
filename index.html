@@ -20,6 +20,43 @@
       const PERSIST_PREFIX = "_bother_storage_";
       const DATA = new PersistentMap(PERSIST_PREFIX);
 
+      var Tools = {
+        tagPos : function(string){
+          var words = new Lexer().lex(string);
+          var taggedWords = new POSTagger().tag(words);
+          var result = []
+          for(var i = 0; i < taggedWords.length; i++){
+            result.push({word : taggedWords[i][0], pos: taggedWords[i][1]});
+          }
+          return result;
+        },
+
+        markovTrainAndGenerate : function(string){
+          markov = new Markov(string, 5);
+          results = [""];
+
+          markov.each(function(t){
+            if(results[results.length-1].length <= 140){
+              results[results.length-1] += t;
+            } else {
+              results.push(t);
+            }
+          })
+
+          return results;
+        },
+
+        fetch : function(url){
+          $.ajax({
+            url: url,
+            dataType: "jsonp",
+            success: function (data) {
+              console.log(data)
+            }
+          });
+        }
+      }
+
       function clearAllChanges() {
         if(confirm("Are you sure? All edits to your corpus text and code will be lost!")) {
           DATA.reallyClearIMeanIt();
@@ -45,46 +82,11 @@
       }
 
       function ready(){
-        function tagPos(string){
-          var words = new Lexer().lex(string);
-          var taggedWords = new POSTagger().tag(words);
-          var result = []
-          for(var i = 0; i < taggedWords.length; i++){
-            result.push({word : taggedWords[i][0], pos: taggedWords[i][1]});
-          }
-          return result;
-        }
-
-        function markovTrainAndGenerate(string){
-          markov = new Markov(string, 5);
-          results = [""];
-
-          markov.each(function(t){
-            if(results[results.length-1].length <= 140){
-              results[results.length-1] += t;
-            } else {
-              results.push(t);
-            }
-          })
-
-          return results;
-        }
-
-        function fetch(url){
-          $.ajax({
-            url: url,
-            dataType: "jsonp",
-            success: function (data) {
-              console.log(data)
-            }
-          });
-        }
-
         $("#pos").submit(function(e){
           e.preventDefault();
           var inputText = $("#pos textarea").val();
 
-          var tags = tagPos(inputText);
+          var tags = Tools.tagPos(inputText);
 
           var result = "";
           for(var i = 0; i < tags.length; i++){
@@ -96,7 +98,7 @@
         $("#markov").submit(function(e){
           e.preventDefault();
           var corpus = $("#markov textarea").val();
-          output = markovTrainAndGenerate(corpus);
+          output = Tools.markovTrainAndGenerate(corpus);
           $("#markov-output").empty();
           for(var i = 0; i < output.length; i++){
             $("#markov-output").append("<li>" + output[i] + "</li>");
