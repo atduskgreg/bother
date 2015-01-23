@@ -8,6 +8,7 @@
       <script type="text/javascript" src="js/jspos-0.2.2/POSTagger.js"></script>
       <script type="text/javascript" src="js/markov.js"></script>
       <script type="text/javascript" src="js/corpora_nav.js"></script>
+      <script type="text/javascript" src="js/examples.js"></script>
 
       <script type="text/javascript" src="js/codemirror-4.12/codemirror-min.js"></script>
 
@@ -64,6 +65,7 @@
 
         renderTweets: function(tweetList) {
           var el = $("#candidate-tweets");
+          el.html("");
           _.each(tweetList, function(tweetText) {
             el.append(candidateTweet(tweetText));
           });
@@ -72,7 +74,7 @@
         fetch : function(url, callback){
           $.ajax({
             url: url,
-            dataType: "json",
+            //dataType: "json",
             success: function (data) {
               callback(data);
             },
@@ -108,13 +110,45 @@
         return func;
       }
 
+      function loadExample() {
+        var textarea = $("#sandbox textarea");
+        var editor = textarea.data("editor");
+
+        if (!editor.isClean()) {
+          if(!confirm("You have made changes to your sample code. Loading an example will overwrite them. Continue?")) {
+            return;
+          }
+        }
+
+        var key = $("#sandbox select").val();
+        var src = EXAMPLES[key];
+
+        if (typeof(src) == "undefined") {
+          return;
+        }
+
+        Tools.fetch(src, function(code) {
+          textarea.text(code);
+          editor.setValue(code);
+          editor.markClean();
+        });
+      }
+
       function ready(){
-        for(var i in corpora_nav){
-          $("#corpora select").append("<option value='"+corpora_nav[i]+"'>"+i+"</option>");
+        for(var i in CORPORA){
+          $("#corpora select").append("<option value='"+CORPORA[i]+"'>"+i+"</option>");
         }
         $("#corpora textarea").hide();
         $("#code-label").hide();
 
+        for (var i in EXAMPLES) {
+          $("#sandbox select").append("<option value='"+i+"'>"+i+"</option>");
+        }
+
+        $("#sandbox-load-btn").click(function(e) {
+          e.preventDefault();
+          loadExample();
+        });
 
         $("#corpora").submit(function(e){
           e.preventDefault();
@@ -144,14 +178,13 @@
           e.preventDefault();
           var corpus = $("#markov textarea").val();
           output = Tools.markovTrainAndGenerate(corpus);
-          $("#markov-output").empty();
           Tools.renderTweets(output);
         });
 
-        $("#scratch").submit(function (e) {
+        $("#sandbox").submit(function (e) {
           e.preventDefault();
 
-          var source = $("#scratch #js-scratch").text();
+          var source = $("#sandbox-code").text();
           var func = compileFunction([], source);
           func();
         });
@@ -170,6 +203,7 @@
             }
 
             var editor = CodeMirror.fromTextArea(textarea, config);
+            e.data("editor", editor);
 
             if (e.attr("data-mode")) {
               editor.setOption("mode", e.attr("data-mode"));
@@ -208,10 +242,15 @@
     </div>
 
     <h2>JavaScript scratchpad</h2>
-    <form id="scratch" action="#">
-      <textarea id="js-scratch" class="editor" data-mode="javascript">alert(1)</textarea>
+    <form id="sandbox" action="#">
+      <p>
+      <select id="sandbox-examples">
+        <option value=""></option>
+      </select>
+      <button id="sandbox-load-btn">load</button>
+      </p>
+      <textarea id="sandbox-code" class="editor" data-mode="javascript">alert(1)</textarea>
       <p><input type="submit" value="evaluate"></p>
-      <p id="scratch-output"></p>
     </form>
 
     <h2>Corpora</h2>
