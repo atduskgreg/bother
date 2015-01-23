@@ -65,6 +65,7 @@
 
         renderTweets: function(tweetList) {
           var el = $("#candidate-tweets");
+          el.html("");
           _.each(tweetList, function(tweetText) {
             el.append(candidateTweet(tweetText));
           });
@@ -73,7 +74,7 @@
         fetch : function(url, callback){
           $.ajax({
             url: url,
-            dataType: "json",
+            //dataType: "json",
             success: function (data) {
               callback(data);
             },
@@ -120,14 +121,17 @@
         }
 
         var key = $("#sandbox select").val();
-        var code = EXAMPLES[key];
-        if (typeof(code) == "undefined") {
-          code = "";
+        var src = EXAMPLES[key];
+
+        if (typeof(src) == "undefined") {
+          return;
         }
 
-        textarea.text(code);
-        editor.setValue(code);
-        editor.markClean();
+        Tools.fetch(src, function(code) {
+          textarea.text(code);
+          editor.setValue(code);
+          editor.markClean();
+        });
       }
 
       function ready(){
@@ -140,6 +144,11 @@
         for (var i in EXAMPLES) {
           $("#sandbox select").append("<option value='"+i+"'>"+i+"</option>");
         }
+
+        $("#sandbox-load-btn").click(function(e) {
+          e.preventDefault();
+          loadExample();
+        });
 
         $("#corpora").submit(function(e){
           e.preventDefault();
@@ -237,8 +246,8 @@
       <p>
       <select id="sandbox-examples">
         <option value=""></option>
-      </select> 
-      <input type="button" value="load" onclick="loadExample()">
+      </select>
+      <button id="sandbox-load-btn">load</button>
       </p>
       <textarea id="sandbox-code" class="editor" data-mode="javascript">alert(1)</textarea>
       <p><input type="submit" value="evaluate"></p>
