@@ -7,6 +7,7 @@
       <script type="text/javascript" src="js/jspos-0.2.2/lexicon.js"></script>
       <script type="text/javascript" src="js/jspos-0.2.2/POSTagger.js"></script>
       <script type="text/javascript" src="js/markov.js"></script>
+      <script type="text/javascript" src="js/corpora_nav.js"></script>
 
       <script type="text/javascript" src="js/codemirror-4.12/codemirror-min.js"></script>
 
@@ -49,12 +50,16 @@
           return results;
         },
 
-        fetch : function(url){
+        fetch : function(url, callback){
           $.ajax({
             url: url,
-            dataType: "jsonp",
+            dataType: "json",
             success: function (data) {
-              console.log(data)
+              callback(data);
+            },
+            error :function(data){
+              console.log("error");
+              console.log(data);
             }
           });
         }
@@ -85,6 +90,25 @@
       }
 
       function ready(){
+        for(var i in corpora_nav){
+          $("#corpora select").append("<option value='"+corpora_nav[i]+"'>"+i+"</option>");
+        }
+        $("#corpora textarea").hide();
+        $("#code-label").hide();
+
+
+        $("#corpora").submit(function(e){
+          e.preventDefault();
+          console.log($("#corpora select").val());
+          $("#corpora textarea").html("Tools.fetch('"+$("#corpora select").val()+"', function(data){\n  console.log(data);\n});");
+          $("#corpora textarea").show();
+          $("#code-label").show();
+          Tools.fetch($("#corpora select").val(), function(data){
+            $("#corpora-output").html(JSON.stringify(data));
+          });
+        });
+        
+
         $("#pos").submit(function(e){
           e.preventDefault();
           var inputText = $("#pos textarea").val();
@@ -169,6 +193,17 @@
       <textarea id="js-scratch" class="editor" data-mode="javascript">alert(1)</textarea>
       <p><input type="submit" value="evaluate"></p>
       <p id="scratch-output"></p>
+    </form>
+
+    <h2>Corpora</h2>
+    <p><em>Data courtesy of <a href="https://github.com/dariusk/corpora">dariusk/corpora</a></em>.</p>
+    <form id="corpora" action="#">
+      <select></select><br />
+      <p><input type="submit" value="show data"></p>
+      <pre id="corpora-output"></pre>
+      <p id="code-label"><label>Copy this code:</label></p>
+      <textarea cols=60 rows=3></textarea>
+
     </form>
 
     <h2>Markov chains</h2>

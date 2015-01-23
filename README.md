@@ -6,6 +6,8 @@
 
 * [yuya-takeyama/Markov-Chain-in-JavaScript](https://github.com/yuya-takeyama/Markov-Chain-in-JavaScript) - Markov chain library
 
+* [Corpora](https://github.com/dariusk/corpora) - A repo with lots of useful lists of words in json format.
+
 ### Bot Syllabus
 
 * [@onlymanthings](http://twitter.com/onlymanthings) by [@thricedotted](http://twitter.com/thricedotted)
