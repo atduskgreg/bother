@@ -14,6 +14,9 @@
 
       <script type="text/javascript" src="js/underscore-1.7.0/underscore-min.js"></script>
       <script type="text/javascript" src="js/persistent.js"></script>
+      <script type="text/javascript" src="js/templates.js"></script>
+
+      <script type="text/javascript" async src="https://platform.twitter.com/widgets.js"></script>
 
       <script type="text/javascript">
 
@@ -89,7 +92,8 @@
           output = markovTrainAndGenerate(corpus);
           $("#markov-output").empty();
           for(var i = 0; i < output.length; i++){
-            $("#markov-output").append("<li>" + output[i] + "</li>");
+            var tweet = candidateTweet(output[i]);
+            $("#markov-output").append(tweet);
           }
         });
 
@@ -159,7 +163,7 @@
     <form id="markov" action="#">
       <textarea id="markov-corpus" class="editor" cols=40 rows=5>Your corpus here.</textarea>
       <p><input type="submit" value="train and generate" /></p>
-      <ul id="markov-output"></ul>
+      <ul class="tweet-list" id="markov-output"></ul>
     </form>
 
     <h2>Part of Speech Tagging</h2>
