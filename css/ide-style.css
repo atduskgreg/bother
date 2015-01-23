@@ -1,0 +1,21 @@
+body {
+  font-family: Optima, Times, serif;
+  height: 100%;
+}
+
+#left-panel {
+  background-color: #0f0;
+}
+
+#center-panel {
+  background-color: #ff0;
+}
+
+#right-panel {
+  background-color: #09f;
+}
+
+#page-content .col {
+  height: 800px;
+}
+
