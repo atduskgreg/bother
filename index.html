@@ -122,6 +122,8 @@
 
             if (e.attr("data-mode")) {
               editor.setOption("mode", e.attr("data-mode"));
+            } else {
+              editor.setOption("mode", "text/plain");
             }
 
             editor.on("changes", function() {
