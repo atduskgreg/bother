@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.css">
+    <link rel="stylesheet" href="css/ide-style.css">
+    <link rel="stylesheet" href="js/codemirror-4.12/codemirror.css">
+
+    <script src="js/jquery-1.11.2.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/codemirror-4.12/codemirror-min.js"></script>
+
+    <script>
+      $(document).ready(function() {
+          $("textarea.editor").each(function(idx, elem) {
+            var editor = CodeMirror.fromTextArea(elem, {lineNumbers: true});
+            $(elem).data("editor", editor);
+          });
+      });
+    </script>
+  </head>
+  <body>
+    <div id="page-content" class="container-fluid">
+      <div class="row">
+        <div id="left-panel" class="col col-md-3">
+          <h3>Source</h3>
+          <p>Inputs for your bot go here. You access the plain text and data fields in your code as TEXT and DATA, respectively.</p>
+          <h4>Text</h4>
+          <textarea id="corpus" class="editor"></textarea>
+          <h4>Data</h4>
+          <select id="dataset"></select> <button>show</button>
+        </div>
+        <div id="center-panel" class="col col-md-6">
+          <h3>Program</h3>
+          <p>The source code for your bot goes below. Try a sample program from the list as a starting point.</p>
+          <p>
+            <select id="example-select"></select> <button id="example-choose">load</button>
+          </p>
+          <textarea id="sandbox" class="editor"></textarea>
+          <br/>
+          <button id="eval">run</button>
+        </div>
+        <div id="right-panel" class="col col-md-3">
+          <h3>Results</h3>
+          <p>Click the 'Tweet' button for any of the options below to post it on Twitter.</p>
+          <ul class="candidate-tweets"></ul>
+        </div>
+      </div>
+  </body>
+</html>
