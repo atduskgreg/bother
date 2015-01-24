@@ -6,17 +6,143 @@
     <link rel="stylesheet" href="css/ide-style.css">
     <link rel="stylesheet" href="js/codemirror-4.12/codemirror.css">
 
+    <!-- basic layout and libraries -->
     <script src="js/jquery-1.11.2.min.js"></script>
+    <script src="js/jquery.xdomainajax.js"></script>
     <script src="js/bootstrap.js"></script>
     <script src="js/codemirror-4.12/codemirror-min.js"></script>
+    <script src="js/underscore-1.7.0/underscore-min.js"></script>
+    <script src="js/jspos-0.2.2/lexer.js"></script>
+    <script src="js/jspos-0.2.2/lexicon.js"></script>
+    <script src="js/jspos-0.2.2/POSTagger.js"></script>
+    <script src="js/markov.js"></script>
+
+    <!-- configuration data and examples -->
+    <script src="js/corpora_nav.js"></script>
+    <script src="js/examples.js"></script>
+    <script src="js/persistent.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/tools.js"></script>
 
     <script>
-      $(document).ready(function() {
-          $("textarea.editor").each(function(idx, elem) {
-            var editor = CodeMirror.fromTextArea(elem, {lineNumbers: true});
-            $(elem).data("editor", editor);
+      const PERSIST_PREFIX = "_saved_field_";
+      const FORM_DATA = new PersistentMap(PERSIST_PREFIX);
+
+      var TEXT = "";
+      var DATA = {};
+
+      function clearAllChanges() {
+        if(confirm("Are you sure? All edits to your corpus text and code will be lost!")) {
+          DATA.reallyClearIMeanIt();
+          location.reload();
+        }
+      }
+
+      // LOLOLOL
+      function compileFunction(params, body) {
+        var proto = params.join(", ");
+        var header = "var _internal = function(" + proto + ") {\n";
+        var footer = "\n};\n_internal;";
+        var code = header + body + footer;
+        var func = undefined;
+
+        try {
+          func = eval(code);
+        } catch (e) {
+          console.error("Could not compile JS code:\n" + code);
+        }
+
+        return func;
+      }
+
+      function loadExample() {
+        var textarea = $("#sandbox");
+        var editor = textarea.data("editor");
+
+        if (!editor.isClean()) {
+          if(!confirm("You have made changes to your sample code. Loading an example will overwrite them. Continue?")) {
+            return;
+          }
+        }
+
+        var key = $("#example-select").val();
+        var src = EXAMPLES[key];
+
+        if (typeof(src) == "undefined") {
+          return;
+        }
+
+        Tools.fetch(src, function(code) {
+          console.log(code);
+          textarea.text(code);
+          editor.setValue(code);
+          editor.markClean();
+        });
+      }
+
+      function ready() {
+        $("textarea.editor").each(function(idx, elem) {
+          var textarea = $(elem);
+
+          var textId = textarea.attr("id");
+          var value = "";
+
+          if (textId && FORM_DATA.hasKey(textId)) {
+            textarea.text(FORM_DATA.get(textId));
+          }
+
+          var globalName = textarea.data("global");
+          if (globalName) {
+            window[globalName] = textarea.val();
+            textarea.change(function(e) {
+              window[globalName] = textarea.val();
+            });
+          }
+
+          var editor = CodeMirror.fromTextArea(elem, {lineNumbers: true});
+          textarea.data("editor", editor);
+
+          var mode = "text/plain";
+
+          if (textarea.data("mode")) {
+            mode = textarea.data("mode");
+          }
+
+          editor.setOption("mode", mode);
+
+          editor.on("changes", function() {
+            var value = editor.getValue();
+            textarea.text(value);
+            if (textId) {
+              FORM_DATA.set(textId, value);
+              if (textId == "corpus") {
+                TEXT = value;
+              } else if (textId == "data") {
+                DATA = value;
+              }
+            }
           });
-      });
+        });
+
+        for (var key in CORPORA) {
+          $("#dataset-select").append("<option value='"+key+"'>" + key + "</option>");
+        }
+
+        for (var key in EXAMPLES) {
+          $("#example-select").append("<option value='"+key+"'>" + key + "</option>");
+        }
+
+        $("#example-choose").click(loadExample);
+
+        $("#sandbox-form").submit(function() {
+            var source = $("#sandbox").text();
+            var func = compileFunction([], source);
+            func();
+        });
+      }
+
+      $(document).ready(ready);
+
     </script>
   </head>
   <body>
@@ -24,26 +150,41 @@
       <div class="row">
         <div id="left-panel" class="col col-md-3">
           <h3>Source</h3>
-          <p>Inputs for your bot go here. You access the plain text and data fields in your code as TEXT and DATA, respectively.</p>
+          <p>
+            Inputs for your bot go here.
+            You can access the plain text and data fields in your code as TEXT and DATA, respectively.</p>
           <h4>Text</h4>
-          <textarea id="corpus" class="editor"></textarea>
+          <textarea id="corpus" class="editor" data-global="TEXT"></textarea>
           <h4>Data</h4>
-          <select id="dataset"></select> <button>show</button>
+          <select id="dataset-select">
+            <option value=""></option>
+          </select>
+          <textarea style="display: none;" data-global="DATA"></textarea>
+          <button>show</button>
         </div>
         <div id="center-panel" class="col col-md-6">
           <h3>Program</h3>
-          <p>The source code for your bot goes below. Try a sample program from the list as a starting point.</p>
-          <p>
-            <select id="example-select"></select> <button id="example-choose">load</button>
-          </p>
-          <textarea id="sandbox" class="editor"></textarea>
-          <br/>
-          <button id="eval">run</button>
+          <form id="sandbox-form" action="#">
+            <p>
+              The source code for your bot goes below. Try a sample program from the list as a starting point.
+            </p>
+            <p>
+              <select id="example-select">
+                <option value=""></option>
+              </select>
+              <button id="example-choose">load</button>
+            </p>
+            <textarea id="sandbox" class="editor" data-mode="javascript"></textarea>
+            <br/>
+            <input type="submit" value="run">
+        </form>
         </div>
         <div id="right-panel" class="col col-md-3">
           <h3>Results</h3>
-          <p>Click the 'Tweet' button for any of the options below to post it on Twitter.</p>
-          <ul class="candidate-tweets"></ul>
+          <p>Click the 'Tweet' button on any of the options below to post it on Twitter.</p>
+          <ul id="candidate-tweets">
+            <li><em>no tweets yet!</em></li>
+          </ul>
         </div>
       </div>
   </body>

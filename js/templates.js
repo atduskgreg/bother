@@ -27,6 +27,7 @@ function candidateTweet(text, elTag) {
   var buttonDiv = $(document.createElement("div"));
   buttonDiv.addClass("tweet-actions");
   buttonDiv.append(cancelBtn);
+  buttonDiv.append("&nbsp;");
   buttonDiv.append(tweetBtn);
 
   el.append(buttonDiv);

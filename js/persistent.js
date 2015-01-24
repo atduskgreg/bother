@@ -25,7 +25,7 @@ function PersistentMap(prefix) {
 
   this.rawKeys = function() {
     return _.filter(_allLocalStorageKeys(), function(k) {
-      return k.startsWith(prefix);
+      return k.indexOf(prefix) == 0;
     });
   }
 
