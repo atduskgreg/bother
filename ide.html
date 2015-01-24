@@ -128,6 +128,18 @@
           $("#dataset-select").append("<option value='"+key+"'>" + key + "</option>");
         }
 
+        $("#dataset-select").change(function() {
+          var key = $("#dataset-select").val();
+          var url = CORPORA[key];
+
+          Tools.fetch(url, function(data) {
+            DATA = data;
+            $("#dataset-preview").text(
+              JSON.stringify(data, undefined, 2)
+            );
+          });
+        });
+
         for (var key in EXAMPLES) {
           $("#example-select").append("<option value='"+key+"'>" + key + "</option>");
         }
@@ -159,8 +171,7 @@
           <select id="dataset-select">
             <option value=""></option>
           </select>
-          <textarea style="display: none;" data-global="DATA"></textarea>
-          <button>show</button>
+          <pre id="dataset-preview"></pre>
         </div>
         <div id="center-panel" class="col col-md-6">
           <h3>Program</h3>
