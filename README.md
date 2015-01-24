@@ -23,3 +23,5 @@
 * [@AutoNetflix](http://twitter.com/AutoNetflix) by [@samplereality](http://twitter.com/samplereality)
 * [@haskell_ebooks](http://twitter.com/haskell_ebooks) by [@atduskgreg](http://twitter.com/atduskgreg)
 
+### What are Markov Chains?
+[This blog post](http://blog.codinghorror.com/markov-and-you/) could be helpful!
