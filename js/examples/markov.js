@@ -1,3 +1,2 @@
-var corpus = $("#markov textarea").val();
-output = Tools.markovTrainAndGenerate(corpus);
+output = Tools.markovTrainAndGenerate(TEXT);
 Tools.renderTweets(output);

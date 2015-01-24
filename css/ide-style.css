@@ -4,18 +4,32 @@ body {
 }
 
 #left-panel {
-  background-color: #0f0;
+  background-color: #6fb;
 }
 
 #center-panel {
-  background-color: #ff0;
+  background-color: #ff9;
 }
 
 #right-panel {
-  background-color: #09f;
+  background-color: #8cf;
 }
 
 #page-content .col {
-  height: 800px;
+  height: 1200px;
+}
+
+ul#candidate-tweets {
+  list-style: none;
+  padding: 0px;
+}
+
+li.candidate-tweet {
+  margin-top: 0.5em;
+  padding: 0px;
+}
+
+li.candidate-tweet .tweet-content {
+  background-color: #9df;
 }
 
