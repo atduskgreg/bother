@@ -8,6 +8,12 @@
 
 * [Corpora](https://github.com/dariusk/corpora) - A repo with lots of useful lists of words in json format.
 
+### Other Tools
+
+* [kimono](https://www.kimonolabs.com/) - Automated web scraping tool: turn any page into an update json feed.
+
+* [If This Then That](https://ifttt.com) - Write simple workflows that can pull in data, check for information, and tweet
+
 ### Bot Syllabus
 
 * [@onlymanthings](http://twitter.com/onlymanthings) by [@thricedotted](http://twitter.com/thricedotted)
