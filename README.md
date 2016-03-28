@@ -1,5 +1,7 @@
 ## Bother - A One-Page Framework for Learning Bot-Making
 
+### Try it [here](http://atduskgreg.github.io/ide.html)
+
 ### Ingredients
 
 * [jspos](https://code.google.com/p/jspos) - Part of Speech Tagging library
