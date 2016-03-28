@@ -18,7 +18,7 @@
 
 ### Bot Syllabus
 
-* [@censusamericans](http://twitter.com/censusamericans by [Jia Zhang for 538](http://fivethirtyeight.com/datalab/introducing-censusamericans-a-twitter-bot-for-america/))
+* [@censusamericans](http://twitter.com/censusamericans) by [Jia Zhang for 538](http://fivethirtyeight.com/datalab/introducing-censusamericans-a-twitter-bot-for-america/))
 * [@onlymanthings](http://twitter.com/onlymanthings) by [@thricedotted](http://twitter.com/thricedotted)
 * [@wikisext](http://twitter.com/wikisext) by [@thricedotted](http://twitter.com/thricedotted)
 * [@twoheadlines](http://twitter.com/twoheadlines) by [@tinysubversions](http://twitter.com/tinysubversions)
