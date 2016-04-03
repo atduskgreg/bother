@@ -1,92 +1,35 @@
+<!DOCTYPE html>
 <html>
   <head>
-      <link rel="stylesheet" href="js/codemirror-4.12/codemirror.css">
-      <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.css">
+    <link rel="stylesheet" href="css/ide-style.css">
+    <link rel="stylesheet" href="js/codemirror-4.12/codemirror.css">
 
-      <script type="text/javascript" src="js/jspos-0.2.2/lexer.js"></script>
-      <script type="text/javascript" src="js/jspos-0.2.2/lexicon.js"></script>
-      <script type="text/javascript" src="js/jspos-0.2.2/POSTagger.js"></script>
-      <script type="text/javascript" src="js/markov.js"></script>
-      <script type="text/javascript" src="js/corpora_nav.js"></script>
-      <script type="text/javascript" src="js/examples.js"></script>
+    <!-- basic layout and libraries -->
+    <script src="js/jquery-1.11.2.min.js"></script>
+    <script src="js/jquery.xdomainajax.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/codemirror-4.12/codemirror-min.js"></script>
+    <script src="js/underscore-1.7.0/underscore-min.js"></script>
+    <script src="js/jspos-0.2.2/lexer.js"></script>
+    <script src="js/jspos-0.2.2/lexicon.js"></script>
+    <script src="js/jspos-0.2.2/POSTagger.js"></script>
+    <script src="js/markov.js"></script>
 
-      <script type="text/javascript" src="js/codemirror-4.12/codemirror-min.js"></script>
+    <!-- configuration data and examples -->
+    <script src="js/corpora_nav.js"></script>
+    <script src="js/examples.js"></script>
+    <script src="js/persistent.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/tools.js"></script>
 
-      <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
-      <script type="text/javascript" src="js/jquery.xdomainajax.js"></script>
+    <script>
+      const PERSIST_PREFIX = "_saved_field_";
+      const FORM_DATA = new PersistentMap(PERSIST_PREFIX);
 
-      <script type="text/javascript" src="js/underscore-1.7.0/underscore-min.js"></script>
-      <script type="text/javascript" src="js/persistent.js"></script>
-      <script type="text/javascript" src="js/templates.js"></script>
-
-      <script type="text/javascript" async src="https://platform.twitter.com/widgets.js"></script>
-
-      <script type="text/javascript">
-
-      const PERSIST_PREFIX = "_bother_storage_";
-      const DATA = new PersistentMap(PERSIST_PREFIX);
-
-      var Tools = {
-        tagPos : function(string){
-          var words = new Lexer().lex(string);
-          var taggedWords = new POSTagger().tag(words);
-          var result = []
-          for(var i = 0; i < taggedWords.length; i++){
-            result.push({word : taggedWords[i][0], pos: taggedWords[i][1]});
-          }
-          return result;
-        },
-
-        markovTrainAndGenerate : function(string){
-          markov = new Markov(string, 5);
-          results = [""];
-
-          markov.each(function(t){
-            if(results[results.length-1].length <= 140){
-              results[results.length-1] += t;
-            } else {
-              results.push(t);
-            }
-          })
-
-          console.log("generated " + results.length + " results from markov chain");
-
-          // return a random "page" (50 results) from full result array
-          const pageSize = 50;
-          var pageCount = Math.floor(results.length / pageSize);
-          if (pageCount > 1) {
-            randomPage = Math.floor(Math.random() * pageCount);
-            console.log(pageCount + " pages generated; choosing page " + randomPage);
-            offset = pageSize * randomPage;
-            results = results.slice(offset, offset+pageSize);
-          }
-
-          return results;
-        },
-
-        renderTweets: function(tweetList) {
-          var el = $("#candidate-tweets");
-          el.html("");
-          _.each(tweetList, function(tweetText) {
-            el.append(candidateTweet(tweetText));
-          });
-        },
-
-        fetch : function(url, callback){
-          $.ajax({
-            url: url,
-            type: "GET",
-            //dataType: "json",
-            success: function (data) {
-              callback(data);
-            },
-            error :function(data){
-              console.log("error");
-              console.log(data);
-            }
-          });
-        }
-      }
+      var TEXT = "";
+      var DATA = {};
 
       function clearAllChanges() {
         if(confirm("Are you sure? All edits to your corpus text and code will be lost!")) {
@@ -113,7 +56,7 @@
       }
 
       function loadExample() {
-        var textarea = $("#sandbox textarea");
+        var textarea = $("#sandbox");
         var editor = textarea.data("editor");
 
         if (!editor.isClean()) {
@@ -122,7 +65,7 @@
           }
         }
 
-        var key = $("#sandbox select").val();
+        var key = $("#example-select").val();
         var src = EXAMPLES[key];
 
         if (typeof(src) == "undefined") {
@@ -130,196 +73,130 @@
         }
 
         Tools.fetch(src, function(code) {
+          console.log(code);
           textarea.text(code);
           editor.setValue(code);
           editor.markClean();
         });
       }
 
-      function ready(){
-        for(var i in CORPORA){
-          $("#corpora select").append("<option value='"+CORPORA[i]+"'>"+i+"</option>");
-        }
-        $("#corpora textarea").hide();
-        $("#code-label").hide();
+      function ready() {
+        $("textarea.editor").each(function(idx, elem) {
+          var textarea = $(elem);
 
-        for (var i in EXAMPLES) {
-          $("#sandbox select").append("<option value='"+i+"'>"+i+"</option>");
-        }
+          var textId = textarea.attr("id");
+          var value = "";
 
-        $("#sandbox-load-btn").click(function(e) {
-          e.preventDefault();
-          loadExample();
-        });
+          if (textId && FORM_DATA.hasKey(textId)) {
+            textarea.text(FORM_DATA.get(textId));
+          }
 
-        $("#corpora").submit(function(e){
-          e.preventDefault();
-          console.log($("#corpora select").val());
-          $("#corpora textarea").html("Tools.fetch('"+$("#corpora select").val()+"', function(data){\n  console.log(data);\n});");
-          $("#corpora textarea").show();
-          $("#code-label").show();
-          Tools.fetch($("#corpora select").val(), function(data){
-            $("#corpora-output").html(JSON.stringify(data));
+          var globalName = textarea.data("global");
+          if (globalName) {
+            window[globalName] = textarea.val();
+            textarea.change(function(e) {
+              window[globalName] = textarea.val();
+            });
+          }
+
+          var editor = CodeMirror.fromTextArea(elem, {lineNumbers: true});
+          textarea.data("editor", editor);
+
+          var mode = "text/plain";
+
+          if (textarea.data("mode")) {
+            mode = textarea.data("mode");
+          }
+
+          editor.setOption("mode", mode);
+
+          editor.on("changes", function() {
+            var value = editor.getValue();
+            textarea.text(value);
+            if (textId) {
+              FORM_DATA.set(textId, value);
+              if (textId == "corpus") {
+                TEXT = value;
+              } else if (textId == "data") {
+                DATA = value;
+              }
+            }
           });
         });
 
-        $("#pos").submit(function(e){
-          e.preventDefault();
-          var inputText = $("#pos textarea").val();
+        for (var key in CORPORA) {
+          $("#dataset-select").append("<option value='"+key+"'>" + key + "</option>");
+        }
 
-          var tags = Tools.tagPos(inputText);
+        $("#dataset-select").change(function() {
+          var key = $("#dataset-select").val();
+          var url = CORPORA[key];
 
-          var result = "";
-          for(var i = 0; i < tags.length; i++){
-            result = result + tags[i].word + " (" + tags[i].pos + ") ";
-          }
-          $("#pos-output").html(result);
+          Tools.fetch(url, function(data) {
+            DATA = data;
+            $("#dataset-preview").text(
+              JSON.stringify(data, undefined, 2)
+            );
+          });
         });
 
-        $("#markov").submit(function(e){
-          e.preventDefault();
-          var corpus = $("#markov textarea").val();
-          output = Tools.markovTrainAndGenerate(corpus);
-          Tools.renderTweets(output);
-        });
+        for (var key in EXAMPLES) {
+          $("#example-select").append("<option value='"+key+"'>" + key + "</option>");
+        }
 
-        $("#sandbox").submit(function (e) {
-          e.preventDefault();
+        $("#example-choose").click(loadExample);
 
-          var source = $("#sandbox-code").text();
-          var func = compileFunction([], source);
-          func();
-        });
-
-        $("textarea.editor").each(function(idx, textarea) {
-            var config = {
-              lineNumbers: true,
-            }
-
-            var e = $(textarea);
-            var eId = e.attr("id");
-
-            // see if we've persisted changes to this field
-            if (eId && DATA.hasKey(eId)) {
-              e.text(DATA.get(eId));
-            }
-
-            var editor = CodeMirror.fromTextArea(textarea, config);
-            e.data("editor", editor);
-
-            if (e.attr("data-mode")) {
-              editor.setOption("mode", e.attr("data-mode"));
-            } else {
-              editor.setOption("mode", "text/plain");
-            }
-
-            editor.on("changes", function() {
-              // accoding to the docs this should work, but...nope!
-              //editor.save();
-              // so we do it the manual way
-              var value = editor.getValue();
-              e.text(value);
-              if (eId) {
-                DATA.set(eId, value);
-              }
-            });
+        $("#sandbox-form").submit(function() {
+            var source = $("#sandbox").text();
+            var func = compileFunction([], source);
+            func();
         });
       }
 
-      document.addEventListener("DOMContentLoaded", ready, false);
+      $(document).ready(ready);
 
-      </script>
+    </script>
   </head>
-
   <body>
-    <form id="toplevel-controls" action="#">
-      <input type="button" class="caution" onclick="clearAllChanges()" value="clear all changes"/>
-    </form>
-
-    <div id="right-gutter">
-      <h2>Candidate Tweets</h2>
-      <ul id="candidate-tweets" class="tweet-list">
-        <li>Use <tt>Tools.renderTweets(...)</tt> to populate this list</li>
-      </ul>
-    </div>
-
-    <h2>JavaScript scratchpad</h2>
-    <form id="sandbox" action="#">
-      <p>
-      <select id="sandbox-examples">
-        <option value=""></option>
-      </select>
-      <button id="sandbox-load-btn">load</button>
-      </p>
-      <textarea id="sandbox-code" class="editor" data-mode="javascript">alert(1)</textarea>
-      <p><input type="submit" value="evaluate"></p>
-    </form>
-
-    <h2>Corpora</h2>
-    <p><em>Data courtesy of <a href="https://github.com/dariusk/corpora">dariusk/corpora</a></em>.</p>
-    <form id="corpora" action="#">
-      <select></select><br />
-      <p><input type="submit" value="show data"></p>
-      <pre id="corpora-output"></pre>
-      <p id="code-label"><label>Copy this code:</label></p>
-      <textarea cols=60 rows=3></textarea>
-
-    </form>
-
-    <h2>Markov chains</h2>
-    <form id="markov" action="#">
-      <textarea id="markov-corpus" class="editor" cols=40 rows=5>Your corpus here.</textarea>
-      <p><input type="submit" value="train and generate" /></p>
-      <ul class="tweet-list" id="markov-output"></ul>
-    </form>
-
-    <h2>Part of Speech Tagging</h2>
-    <form id="pos" action="#">
-      <textarea id="pos-corpus" class="editor" cols=40 rows=5>Roses are red, violets are blue.</textarea>
-      <p id="pos-output"></p>
-      <p><input type="submit" value="tag" /></p>
-    </form>
-    <div id="pos-defs">
-      <p>(via <a href="http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html">upenn</a>, standard NLP notation)
-
-<ul>
-<li>CC Coordinating conjunction
-</li><li>CD Cardinal number
-</li><li>DT Determiner
-</li><li>EX Existential there
-</li><li>FW Foreign word
-</li><li>IN Preposition or subordinating conjunction
-</li><li>JJ Adjective
-</li><li>JJR Adjective, comparative
-</li><li>JJS Adjective, superlative
-</li><li>LS List item marker
-</li><li>MD Modal
-</li><li>NN Noun, singular or mass
-</li><li>NNS Noun, plural
-</li><li>NNP Proper noun, singular
-</li><li>NNPS Proper noun, plural
-</li><li>PDT Predeterminer
-</li><li>POS Possessive ending
-</li><li>PRP Personal pronoun
-</li><li>PRP$ Possessive pronoun
-</li><li>RB Adverb
-</li><li>RBR Adverb, comparative
-</li><li>RBS Adverb, superlative
-</li><li>RP Particle
-</li><li>SYM Symbol
-</li><li>TO to
-</li><li>UH Interjection
-</li><li>VB Verb, base form
-</li><li>VBD Verb, past tense
-</li><li>VBG Verb, gerund or present participle
-</li><li>VBN Verb, past participle
-</li><li>VBP Verb, non-3rd person singular present
-</li><li>VBZ Verb, 3rd person singular present
-</li><li>WDT Wh-determiner
-</li><li>WP Wh-pronoun
-</li><li>WP$ Possessive wh-pronoun
-</li><li>WRB Wh-adverb</li>
-</ul>
+    <div id="page-content" class="container-fluid">
+      <div class="row">
+        <div id="left-panel" class="col col-md-3">
+          <h3>Source</h3>
+          <p>
+            Inputs for your bot go here.
+            You can access the plain text and data fields in your code as TEXT and DATA, respectively.</p>
+          <h4>Text</h4>
+          <textarea id="corpus" class="editor" data-global="TEXT"></textarea>
+          <h4>Data</h4>
+          <select id="dataset-select">
+            <option value=""></option>
+          </select>
+          <pre id="dataset-preview"></pre>
+        </div>
+        <div id="center-panel" class="col col-md-6">
+          <h3>Program</h3>
+          <form id="sandbox-form" action="#">
+            <p>
+              The source code for your bot goes below. Try a sample program from the list as a starting point.
+            </p>
+            <p>
+              <select id="example-select">
+                <option value=""></option>
+              </select>
+              <button id="example-choose">load</button>
+            </p>
+            <textarea id="sandbox" class="editor" data-mode="javascript"></textarea>
+            <br/>
+            <input type="submit" value="run">
+        </form>
+        </div>
+        <div id="right-panel" class="col col-md-3">
+          <h3>Results</h3>
+          <p>Click the 'Tweet' button on any of the options below to post it on Twitter.</p>
+          <ul id="candidate-tweets">
+            <li><em>no tweets yet!</em></li>
+          </ul>
+        </div>
+      </div>
   </body>
-
 </html>

@@ -1,0 +1,325 @@
+<html>
+  <head>
+      <link rel="stylesheet" href="js/codemirror-4.12/codemirror.css">
+      <link rel="stylesheet" href="style.css">
+
+      <script type="text/javascript" src="js/jspos-0.2.2/lexer.js"></script>
+      <script type="text/javascript" src="js/jspos-0.2.2/lexicon.js"></script>
+      <script type="text/javascript" src="js/jspos-0.2.2/POSTagger.js"></script>
+      <script type="text/javascript" src="js/markov.js"></script>
+      <script type="text/javascript" src="js/corpora_nav.js"></script>
+      <script type="text/javascript" src="js/examples.js"></script>
+
+      <script type="text/javascript" src="js/codemirror-4.12/codemirror-min.js"></script>
+
+      <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
+      <script type="text/javascript" src="js/jquery.xdomainajax.js"></script>
+
+      <script type="text/javascript" src="js/underscore-1.7.0/underscore-min.js"></script>
+      <script type="text/javascript" src="js/persistent.js"></script>
+      <script type="text/javascript" src="js/templates.js"></script>
+
+      <script type="text/javascript" async src="https://platform.twitter.com/widgets.js"></script>
+
+      <script type="text/javascript">
+
+      const PERSIST_PREFIX = "_bother_storage_";
+      const DATA = new PersistentMap(PERSIST_PREFIX);
+
+      var Tools = {
+        tagPos : function(string){
+          var words = new Lexer().lex(string);
+          var taggedWords = new POSTagger().tag(words);
+          var result = []
+          for(var i = 0; i < taggedWords.length; i++){
+            result.push({word : taggedWords[i][0], pos: taggedWords[i][1]});
+          }
+          return result;
+        },
+
+        markovTrainAndGenerate : function(string){
+          markov = new Markov(string, 5);
+          results = [""];
+
+          markov.each(function(t){
+            if(results[results.length-1].length <= 140){
+              results[results.length-1] += t;
+            } else {
+              results.push(t);
+            }
+          })
+
+          console.log("generated " + results.length + " results from markov chain");
+
+          // return a random "page" (50 results) from full result array
+          const pageSize = 50;
+          var pageCount = Math.floor(results.length / pageSize);
+          if (pageCount > 1) {
+            randomPage = Math.floor(Math.random() * pageCount);
+            console.log(pageCount + " pages generated; choosing page " + randomPage);
+            offset = pageSize * randomPage;
+            results = results.slice(offset, offset+pageSize);
+          }
+
+          return results;
+        },
+
+        renderTweets: function(tweetList) {
+          var el = $("#candidate-tweets");
+          el.html("");
+          _.each(tweetList, function(tweetText) {
+            el.append(candidateTweet(tweetText));
+          });
+        },
+
+        fetch : function(url, callback){
+          $.ajax({
+            url: url,
+            type: "GET",
+            //dataType: "json",
+            success: function (data) {
+              callback(data);
+            },
+            error :function(data){
+              console.log("error");
+              console.log(data);
+            }
+          });
+        }
+      }
+
+      function clearAllChanges() {
+        if(confirm("Are you sure? All edits to your corpus text and code will be lost!")) {
+          DATA.reallyClearIMeanIt();
+          location.reload();
+        }
+      }
+
+      // LOLOLOL
+      function compileFunction(params, body) {
+        var proto = params.join(", ");
+        var header = "var _internal = function(" + proto + ") {\n";
+        var footer = "\n};\n_internal;";
+        var code = header + body + footer;
+        var func = undefined;
+
+        try {
+          func = eval(code);
+        } catch (e) {
+          console.error("Could not compile JS code:\n" + code);
+        }
+
+        return func;
+      }
+
+      function loadExample() {
+        var textarea = $("#sandbox textarea");
+        var editor = textarea.data("editor");
+
+        if (!editor.isClean()) {
+          if(!confirm("You have made changes to your sample code. Loading an example will overwrite them. Continue?")) {
+            return;
+          }
+        }
+
+        var key = $("#sandbox select").val();
+        var src = EXAMPLES[key];
+
+        if (typeof(src) == "undefined") {
+          return;
+        }
+
+        Tools.fetch(src, function(code) {
+          textarea.text(code);
+          editor.setValue(code);
+          editor.markClean();
+        });
+      }
+
+      function ready(){
+        for(var i in CORPORA){
+          $("#corpora select").append("<option value='"+CORPORA[i]+"'>"+i+"</option>");
+        }
+        $("#corpora textarea").hide();
+        $("#code-label").hide();
+
+        for (var i in EXAMPLES) {
+          $("#sandbox select").append("<option value='"+i+"'>"+i+"</option>");
+        }
+
+        $("#sandbox-load-btn").click(function(e) {
+          e.preventDefault();
+          loadExample();
+        });
+
+        $("#corpora").submit(function(e){
+          e.preventDefault();
+          console.log($("#corpora select").val());
+          $("#corpora textarea").html("Tools.fetch('"+$("#corpora select").val()+"', function(data){\n  console.log(data);\n});");
+          $("#corpora textarea").show();
+          $("#code-label").show();
+          Tools.fetch($("#corpora select").val(), function(data){
+            $("#corpora-output").html(JSON.stringify(data));
+          });
+        });
+
+        $("#pos").submit(function(e){
+          e.preventDefault();
+          var inputText = $("#pos textarea").val();
+
+          var tags = Tools.tagPos(inputText);
+
+          var result = "";
+          for(var i = 0; i < tags.length; i++){
+            result = result + tags[i].word + " (" + tags[i].pos + ") ";
+          }
+          $("#pos-output").html(result);
+        });
+
+        $("#markov").submit(function(e){
+          e.preventDefault();
+          var corpus = $("#markov textarea").val();
+          output = Tools.markovTrainAndGenerate(corpus);
+          Tools.renderTweets(output);
+        });
+
+        $("#sandbox").submit(function (e) {
+          e.preventDefault();
+
+          var source = $("#sandbox-code").text();
+          var func = compileFunction([], source);
+          func();
+        });
+
+        $("textarea.editor").each(function(idx, textarea) {
+            var config = {
+              lineNumbers: true,
+            }
+
+            var e = $(textarea);
+            var eId = e.attr("id");
+
+            // see if we've persisted changes to this field
+            if (eId && DATA.hasKey(eId)) {
+              e.text(DATA.get(eId));
+            }
+
+            var editor = CodeMirror.fromTextArea(textarea, config);
+            e.data("editor", editor);
+
+            if (e.attr("data-mode")) {
+              editor.setOption("mode", e.attr("data-mode"));
+            } else {
+              editor.setOption("mode", "text/plain");
+            }
+
+            editor.on("changes", function() {
+              // accoding to the docs this should work, but...nope!
+              //editor.save();
+              // so we do it the manual way
+              var value = editor.getValue();
+              e.text(value);
+              if (eId) {
+                DATA.set(eId, value);
+              }
+            });
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", ready, false);
+
+      </script>
+  </head>
+
+  <body>
+    <form id="toplevel-controls" action="#">
+      <input type="button" class="caution" onclick="clearAllChanges()" value="clear all changes"/>
+    </form>
+
+    <div id="right-gutter">
+      <h2>Candidate Tweets</h2>
+      <ul id="candidate-tweets" class="tweet-list">
+        <li>Use <tt>Tools.renderTweets(...)</tt> to populate this list</li>
+      </ul>
+    </div>
+
+    <h2>JavaScript scratchpad</h2>
+    <form id="sandbox" action="#">
+      <p>
+      <select id="sandbox-examples">
+        <option value=""></option>
+      </select>
+      <button id="sandbox-load-btn">load</button>
+      </p>
+      <textarea id="sandbox-code" class="editor" data-mode="javascript">alert(1)</textarea>
+      <p><input type="submit" value="evaluate"></p>
+    </form>
+
+    <h2>Corpora</h2>
+    <p><em>Data courtesy of <a href="https://github.com/dariusk/corpora">dariusk/corpora</a></em>.</p>
+    <form id="corpora" action="#">
+      <select></select><br />
+      <p><input type="submit" value="show data"></p>
+      <pre id="corpora-output"></pre>
+      <p id="code-label"><label>Copy this code:</label></p>
+      <textarea cols=60 rows=3></textarea>
+
+    </form>
+
+    <h2>Markov chains</h2>
+    <form id="markov" action="#">
+      <textarea id="markov-corpus" class="editor" cols=40 rows=5>Your corpus here.</textarea>
+      <p><input type="submit" value="train and generate" /></p>
+      <ul class="tweet-list" id="markov-output"></ul>
+    </form>
+
+    <h2>Part of Speech Tagging</h2>
+    <form id="pos" action="#">
+      <textarea id="pos-corpus" class="editor" cols=40 rows=5>Roses are red, violets are blue.</textarea>
+      <p id="pos-output"></p>
+      <p><input type="submit" value="tag" /></p>
+    </form>
+    <div id="pos-defs">
+      <p>(via <a href="http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html">upenn</a>, standard NLP notation)
+
+<ul>
+<li>CC Coordinating conjunction
+</li><li>CD Cardinal number
+</li><li>DT Determiner
+</li><li>EX Existential there
+</li><li>FW Foreign word
+</li><li>IN Preposition or subordinating conjunction
+</li><li>JJ Adjective
+</li><li>JJR Adjective, comparative
+</li><li>JJS Adjective, superlative
+</li><li>LS List item marker
+</li><li>MD Modal
+</li><li>NN Noun, singular or mass
+</li><li>NNS Noun, plural
+</li><li>NNP Proper noun, singular
+</li><li>NNPS Proper noun, plural
+</li><li>PDT Predeterminer
+</li><li>POS Possessive ending
+</li><li>PRP Personal pronoun
+</li><li>PRP$ Possessive pronoun
+</li><li>RB Adverb
+</li><li>RBR Adverb, comparative
+</li><li>RBS Adverb, superlative
+</li><li>RP Particle
+</li><li>SYM Symbol
+</li><li>TO to
+</li><li>UH Interjection
+</li><li>VB Verb, base form
+</li><li>VBD Verb, past tense
+</li><li>VBG Verb, gerund or present participle
+</li><li>VBN Verb, past participle
+</li><li>VBP Verb, non-3rd person singular present
+</li><li>VBZ Verb, 3rd person singular present
+</li><li>WDT Wh-determiner
+</li><li>WP Wh-pronoun
+</li><li>WP$ Possessive wh-pronoun
+</li><li>WRB Wh-adverb</li>
+</ul>
+  </body>
+
+</html>
