@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bother - Bot Making IDE: Tracery</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS dependecies -->
+  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/bootstrap/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/pickadate/lib/themes/classic.css"/>
+  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/pickadate/lib/themes/classic.date.css"/>
+  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/fontawesome/css/font-awesome.min.css"/>
+  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/summernote/dist/summernote.css"/>
+
+  <!-- Sensei Grid CSS -->
+  <link rel="stylesheet" type="text/css" href="sensei-grid/src/css/sensei-grid.css?v=20151207064004"/>
+
+  <!-- JS dependencies -->
+  <script src="sensei-grid/lib/jquery/dist/jquery.min.js"></script>
+  <script src="sensei-grid/lib/lodash/dist/lodash.min.js"></script>
+  <script src="sensei-grid/lib/pickadate/lib/picker.js"></script>
+  <script src="sensei-grid/lib/pickadate/lib/picker.date.js"></script>
+  <script src="sensei-grid/lib/bootstrap/dist/js/bootstrap.js"></script>
+  <script src="sensei-grid/lib/summernote/dist/summernote.js"></script>
+  <script defer src="/js/tracery.js"></script>
+  <script defer src="/js/clipboard.min.js"></script>
+
+  <!-- Sensei Grid JS -->
+  <script src="sensei-grid/src/sensei-grid.js"></script>
+  <script src="sensei-grid/src/sensei-editors.js"></script>
+  <script src="sensei-grid/src/sensei-row-actions.js"></script>
+
+  <!-- Custom CSS for this example -->
+  <style type="text/css">
+    .example {
+      width: 940px;
+      margin: 50px auto;
+      padding: 0 20px;
+    }
+
+    .sensei-grid {
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-weight: bold;
+      line-height: normal;
+    }
+
+    #container {
+      width: 800px;
+      margin: 0 auto;
+    }
+
+    textarea{ 
+      width: 100%;
+    }
+    #templateExplain {
+      font-style: italic;
+      color: #999;
+    }
+    th {
+      background-color: #eee;
+    }
+  </style>
+
+  <script>
+  var columns = ["weather", "country", "verb", "adjective", "geographical location"];
+  function getTraceryData(){
+    var data = window.grid.getGridData();
+    var result = {};
+    for(var j = 0; j < columns.length; j++){
+      result[columns[j]] = [];
+      for(var i = 0; i < data.length; i++){
+        if(data[i][columns[j]]){
+          result[columns[j]].push(data[i][columns[j]]);
+        }
+      }
+    }
+    result.origin = $("#template textarea").val();
+    return result;
+  }
+
+  function updateTracery(){
+    try{
+      var grammar = tracery.createGrammar(getTraceryData());
+      $("#output").html(grammar.flatten("#origin#"));
+      $("#traceryData").html(JSON.stringify(getTraceryData()));
+      $("#templateExplain").html("<b>Avaible tags:</b> #" + columns.join("# #") + "#");
+
+      $("#template textarea").css("background-color", "#fff");
+
+    } catch(err){
+
+      $("#template textarea").css("background-color", "#fee");
+    }
+  }
+
+  $( document ).ready(function() {
+    var options = {
+      // add an empty row at the end of grid
+      emptyRow: true,
+      // enable sortable callbacks
+      sortable: false,
+      // disable specific keys
+      disableKeys: [],
+      // move active cell when a row is removed
+      moveOnRowRemove: true,
+      // skip these cells on duplicate action
+      skipOnDuplicate: ["id"]};  
+
+    var cols = [];
+    for(var i = 0; i < columns.length; i++){
+      cols.push({name : columns[i], type: "string"});
+    }
+
+
+    var data = [{"weather":"rain","country":"Spain","verb":"falls","adjective":"mainly","geographical location":"plain"},{"weather":"snow","country":"England","verb":"appears","adjective":"primarily","geographical location":"imagination"},{"weather":"sleet","country":"","verb":"burns","adjective":"occassionally","geographical location":""},{"weather":"frogs","country":"","verb":"","adjective":"","geographical location":""},{"weather":"plagues","country":"","verb":"","adjective":"","geographical location":""},{"weather":"","country":"","verb":"","adjective":"","geographical location":""}];
+
+     var grid = $(".grid").grid(data, cols, options);
+
+    grid.registerEditor(BasicEditor);
+    grid.registerEditor(TextareaEditor);
+
+
+    grid.events.on("row:save", function(data, $row, source) {
+      
+      updateTracery();
+    });
+
+    $("#refresh").click(function(){
+      updateTracery();
+    });
+
+    grid.render();
+
+      window.grid = grid
+
+      var clipboard = new Clipboard('.btn');
+
+      clipboard.on('success', function(e) {
+          console.log(e);
+      });
+  
+      clipboard.on('error', function(e) {
+          console.log(e);
+      });
+      updateTracery();
+
+  });
+  </script>
+
+</head>
+<body>
+  <div class="container">
+    <div id="template">
+      <h2>Write your template</h2>
+      <p id="templateExplain"></p>
+      <textarea>The #weather# in #country# #verb# #adjective# in the #geographical location#.</textarea>
+      <h3>Output</h3>
+      <p id="output"></p> (<a id="refresh" href="#">refresh</a>)
+    </div>
+    <div>
+    <h2>Enter Your Bot data</h2>
+      <div class="grid"></div>
+    </div>
+    <div>
+      <h3>
+        Tracery Data
+      </h3>
+      <button class="btn" data-clipboard-action="copy" data-clipboard-target="#traceryData">Copy</button>
+
+      <textarea id="traceryData"></textarea>
+    </div>
+  </div>
+</body>
+</html>
