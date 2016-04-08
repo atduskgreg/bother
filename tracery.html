@@ -9,8 +9,13 @@
   <script defer src="js/tracery.js"></script>
   <script defer src="js/clipboard.min.js"></script>
 
+  <script src="js/jquery-1.11.2.min.js"></script>
 
   <script src="js/handsontable/dist/handsontable.full.js"></script>
+
+  <link rel="stylesheet" media="screen" href="css/bootstrap.css">
+  <link rel="stylesheet" media="screen" href="css/bootstrap-theme.css">
+
   <link rel="stylesheet" media="screen" href="js/handsontable/dist/handsontable.full.css">
 
   <!-- Custom CSS for this example -->
@@ -163,7 +168,7 @@
 
 </head>
 <body>
-  <div class="container">
+<div class="container">
     <div id="template">
       <h2>Write your template</h2>
       <p id="templateExplain"></p>
@@ -172,12 +177,12 @@
       <h3>Output</h3>
       <p id="output"></p> (<a id="refresh" href="#">refresh</a>)
     </div>
-    <div>
-    <h2>Enter Your Bot Data</h2>
-    <p><em>Right-click to add or remove columns. Click the header to rename. Drag the header to expand or move columns.</em></p>
+    <div id="data">
+      <h2>Enter Your Bot Data</h2>
+      <p><em>Right-click to add or remove columns. Click the header to rename. Drag the header to expand or move columns.</em></p>
       <div id="grid"></div>
     </div>
-    <div>
+    <div id="tracery">
       <h3>
         Tracery Data
       </h3>
@@ -186,6 +191,7 @@
 
       <textarea id="traceryData"></textarea>
     </div>
-  </div>
+</div>
+
 </body>
 </html>
