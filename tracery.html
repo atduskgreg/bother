@@ -6,43 +6,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS dependecies -->
-  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/bootstrap/dist/css/bootstrap.min.css"/>
-  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/pickadate/lib/themes/classic.css"/>
-  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/pickadate/lib/themes/classic.date.css"/>
-  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/fontawesome/css/font-awesome.min.css"/>
-  <link rel="stylesheet" type="text/css" href="sensei-grid/lib/summernote/dist/summernote.css"/>
-
-  <!-- Sensei Grid CSS -->
-  <link rel="stylesheet" type="text/css" href="sensei-grid/src/css/sensei-grid.css?v=20151207064004"/>
-
-  <!-- JS dependencies -->
-  <script src="sensei-grid/lib/jquery/dist/jquery.min.js"></script>
-  <script src="sensei-grid/lib/lodash/dist/lodash.min.js"></script>
-  <script src="sensei-grid/lib/pickadate/lib/picker.js"></script>
-  <script src="sensei-grid/lib/pickadate/lib/picker.date.js"></script>
-  <script src="sensei-grid/lib/bootstrap/dist/js/bootstrap.js"></script>
-  <script src="sensei-grid/lib/summernote/dist/summernote.js"></script>
   <script defer src="js/tracery.js"></script>
   <script defer src="js/clipboard.min.js"></script>
 
-  <!-- Sensei Grid JS -->
-  <script src="sensei-grid/src/sensei-grid.js"></script>
-  <script src="sensei-grid/src/sensei-editors.js"></script>
-  <script src="sensei-grid/src/sensei-row-actions.js"></script>
+
+  <script src="js/handsontable/dist/handsontable.full.js"></script>
+  <link rel="stylesheet" media="screen" href="js/handsontable/dist/handsontable.full.css">
 
   <!-- Custom CSS for this example -->
   <style type="text/css">
-    .example {
+  /*  .example {
       width: 940px;
       margin: 50px auto;
       padding: 0 20px;
     }
-
-    .sensei-grid {
+*/
+/*    .sensei-grid {
       margin-bottom: 20px;
     }
-
+*/
     h1 {
       font-weight: bold;
       line-height: normal;
@@ -66,18 +48,34 @@
   </style>
 
   <script>
-  var columns = ["weather", "country", "verb", "adjective", "geographical location"];
-  function getTraceryData(){
-    var data = window.grid.getGridData();
-    var result = {};
-    for(var j = 0; j < columns.length; j++){
-      result[columns[j]] = [];
-      for(var i = 0; i < data.length; i++){
-        if(data[i][columns[j]]){
-          result[columns[j]].push(data[i][columns[j]]);
-        }
+  Array.prototype.clean = function(deleteValue) {
+  for (var i = 0; i < this.length; i++) {
+    if (this[i] == deleteValue) {         
+      this.splice(i, 1);
+      i--;
+    }
+  }
+  return this;
+  };
+
+  Array.prototype.allEmpty = function(){
+    result = true;
+    for(var i = 0; i < this.length; i++){
+      if(this[i]){
+        result = false;
+      } else {
+        result = true && result;
       }
     }
+    return result;
+  }
+
+  function getTraceryData(){
+    result = {};
+    for(var i = 0; i < colHeadings.length; i++){
+        result[colHeadings[i]] = hot.getDataAtCol(i).clean();
+    }
+    
     result.origin = $("#template textarea").val();
     return result;
   }
@@ -87,69 +85,80 @@
       var grammar = tracery.createGrammar(getTraceryData());
       $("#output").html(grammar.flatten("#origin#"));
       $("#traceryData").html(JSON.stringify(getTraceryData()));
-      $("#templateExplain").html("<b>Avaible tags:</b> #" + columns.join("# #") + "#");
+      $("#templateExplain").html("<b>Avaible tags:</b> #" + colHeadings.join("# #") + "#");
 
       $("#template textarea").css("background-color", "#fff");
 
     } catch(err){
-
+      console.log(err);
       $("#template textarea").css("background-color", "#fee");
     }
   }
+  var hot;
+  var colHeadings;
+  $(document).ready(function(){
 
-  $( document ).ready(function() {
-    var options = {
-      // add an empty row at the end of grid
-      emptyRow: true,
-      // enable sortable callbacks
-      sortable: false,
-      // disable specific keys
-      disableKeys: [],
-      // move active cell when a row is removed
-      moveOnRowRemove: true,
-      // skip these cells on duplicate action
-      skipOnDuplicate: ["id"]};  
+      var origData = {"weather":["rain","snow","sleet","frogs","plagues"],"country":["Spain","England"],"verb":["falls","appears","burns"],"adjective":["mainly","primarily","occassionally"],"geographical location":["plain","imagination"]};
 
-    var cols = [];
-    for(var i = 0; i < columns.length; i++){
-      cols.push({name : columns[i], type: "string"});
-    }
+      colHeadings = Object.keys(origData);
 
-
-    var data = [{"weather":"rain","country":"Spain","verb":"falls","adjective":"mainly","geographical location":"plain"},{"weather":"snow","country":"England","verb":"appears","adjective":"primarily","geographical location":"imagination"},{"weather":"sleet","country":"","verb":"burns","adjective":"occassionally","geographical location":""},{"weather":"frogs","country":"","verb":"","adjective":"","geographical location":""},{"weather":"plagues","country":"","verb":"","adjective":"","geographical location":""},{"weather":"","country":"","verb":"","adjective":"","geographical location":""}];
-
-     var grid = $(".grid").grid(data, cols, options);
-
-    grid.registerEditor(BasicEditor);
-    grid.registerEditor(TextareaEditor);
-
-
-    grid.events.on("row:save", function(data, $row, source) {
+      var longestCol = 0;
+      for(key in origData){
+        if(origData[key].length > longestCol){
+          longestCol = origData[key].length;
+        }
+      }
+      var result = [];
+      for(var i = 0; i < longestCol; i++){
+        row = [];
+        for(key in origData){
+          row.push(origData[key][i]);
+        }
+        result.push(row);
+      }
+      result.push([]);
       
-      updateTracery();
-    });
 
-    $("#refresh").click(function(e){
-      e.preventDefault();
-      updateTracery();
-    });
-
-    grid.render();
-
-      window.grid = grid
-
-      var clipboard = new Clipboard('.btn');
-
-      clipboard.on('success', function(e) {
-          console.log(e);
-      });
   
-      clipboard.on('error', function(e) {
-          console.log(e);
-      });
-      updateTracery();
+      var container = document.getElementById('grid');
+      hot = new Handsontable(container,{
+        data: result,
+        contextMenu: ["col_right", "remove_col"],
+        allowInsertColumn : true,
+        allowRemoveColumn : true,
+        colHeaders : colHeadings,
+        colHeaders: function (index) {
+            var textbox = '<input type="text" value="' + colHeadings[index] + '" />';
+            return textbox;
+        },
+        afterOnCellMouseDown: function (sender, e) {
+            if (e.row === -1) {
 
-  });
+                colHeadings[e.col] = $(sender.realTarget).val();
+                this.getInstance().deselectCell();
+                $("#grid").handsontable('updateSettings', {'colHeaders': colHeadings});
+            }
+        },
+         manualColumnMove: true,
+         manualColumnResize: true,
+        afterChange : function(){
+          if(!this.getSourceData()[this.getSourceData().length - 1].allEmpty()){
+            this.alter("insert_row",this.getSourceData().length);
+          } 
+          if(hot){
+            updateTracery();
+          }
+         
+
+        }
+       });
+
+      $("#refresh").click(function(e){
+        e.preventDefault();
+        updateTracery();
+      });
+    });
+
   </script>
 
 </head>
@@ -159,17 +168,20 @@
       <h2>Write your template</h2>
       <p id="templateExplain"></p>
       <textarea>The #weather# in #country# #verb# #adjective# in the #geographical location#.</textarea>
+      <p><em>(Learn all about <a target="_" href="http://www.crystalcodepalace.com/traceryTut.html">Tracery</a>.)</em></p>
       <h3>Output</h3>
       <p id="output"></p> (<a id="refresh" href="#">refresh</a>)
     </div>
     <div>
-    <h2>Enter Your Bot data</h2>
-      <div class="grid"></div>
+    <h2>Enter Your Bot Data</h2>
+    <p><em>Right-click to add or remove columns. Click the header to rename. Drag the header to expand or move columns.</em></p>
+      <div id="grid"></div>
     </div>
     <div>
       <h3>
         Tracery Data
       </h3>
+      <p>Paste this into <a href="http://cheapbotsdonequick.com/">Cheap Bots Done Quick!</a> to deploy your bot.</p>
       <button class="btn" data-clipboard-action="copy" data-clipboard-target="#traceryData">Copy</button>
 
       <textarea id="traceryData"></textarea>

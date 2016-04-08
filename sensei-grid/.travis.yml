@@ -1,8 +1,0 @@
-language: node_js
-node_js:
-- '0.11'
-before_install:
-- npm install -g grunt-cli
-notifications:
-  slack:
-    secure: SsRWdZrZRJtJujvubUB0IZVXIsgCC4sk4U2pey9NnvNDS9IeSnb3A+s25B4MgUO9OzX+Z8e6vXwtLoaFTfVOsG4v/G8bEBRO0La7R9IIdFbm/59krRIUSrOEc7zGbD/gktnsjGdDfvbYNEdp/xiYIrWqt7br8pgujbvg/t0vDq4=
