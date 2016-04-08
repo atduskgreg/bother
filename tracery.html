@@ -129,7 +129,8 @@
       updateTracery();
     });
 
-    $("#refresh").click(function(){
+    $("#refresh").click(function(e){
+      e.preventDefault();
       updateTracery();
     });
 
