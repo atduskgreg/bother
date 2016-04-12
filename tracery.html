@@ -18,18 +18,8 @@
 
   <link rel="stylesheet" media="screen" href="js/handsontable/dist/handsontable.full.css">
 
-  <!-- Custom CSS for this example -->
   <style type="text/css">
-  /*  .example {
-      width: 940px;
-      margin: 50px auto;
-      padding: 0 20px;
-    }
-*/
-/*    .sensei-grid {
-      margin-bottom: 20px;
-    }
-*/
+
     h1 {
       font-weight: bold;
       line-height: normal;
@@ -75,21 +65,27 @@
     return result;
   }
 
-  function getTraceryData(){
-    result = {};
-    for(var i = 0; i < colHeadings.length; i++){
-        result[colHeadings[i]] = hot.getDataAtCol(i).clean();
-    }
-    
-    result.origin = $("#template textarea").val();
-    return result;
+
+
+  function importFromTracery(json){
+
+
+    $("#template textarea").val(json["origin"]);
+    delete json["origin"];
+
+    data = traceryToHot(json);
+    hot.loadData(data);
+    applyEvents();
   }
 
   function updateTracery(){
     try{
+      console.log("updateTracery");
       var grammar = tracery.createGrammar(getTraceryData());
       $("#output").html(grammar.flatten("#origin#"));
-      $("#traceryData").html(JSON.stringify(getTraceryData()));
+      $("#traceryData").val(JSON.stringify(getTraceryData()));
+      $("#traceryData").text(JSON.stringify(getTraceryData()));
+
       $("#templateExplain").html("<b>Avaible tags:</b> #" + colHeadings.join("# #") + "#");
 
       $("#template textarea").css("background-color", "#fff");
@@ -99,36 +95,49 @@
       $("#template textarea").css("background-color", "#fee");
     }
   }
-  var hot;
-  var colHeadings;
-  $(document).ready(function(){
 
-      var origData = {"weather":["rain","snow","sleet","frogs","plagues"],"country":["Spain","England"],"verb":["falls","appears","burns"],"adjective":["mainly","primarily","occassionally"],"geographical location":["plain","imagination"]};
+  function getTraceryData(){
+    var result = {origin : $("#template textarea").val()};
+    for(var col = 0; col < colHeadings.length; col++){
+      result[colHeadings[col]] = [];    
+    }
 
-      colHeadings = Object.keys(origData);
+    var hotData =  hot.getData();
+    for(var row = 0; row < hotData.length; row++){
+      for(var col = 0; col < colHeadings.length; col++){
+        if(hotData[row][col]){
+          result[colHeadings[col]].push(hotData[row][col]); 
+        }
+      }
+    }
+
+    return result;
+  }
+
+  function traceryToHot(data){
+    colHeadings = Object.keys(data);
 
       var longestCol = 0;
-      for(key in origData){
-        if(origData[key].length > longestCol){
-          longestCol = origData[key].length;
+      for(key in data){
+        if(data[key].length > longestCol){
+          longestCol = data[key].length;
         }
       }
       var result = [];
       for(var i = 0; i < longestCol; i++){
         row = [];
-        for(key in origData){
-          row.push(origData[key][i]);
+        for(key in data){
+          row.push(data[key][i]);
         }
         result.push(row);
       }
       result.push([]);
-      
+      return result;
+  }
 
-      var justEditedHeader = false;
-      var lastHeaderEdited;
-      var container = document.getElementById('grid');
-      hot = new Handsontable(container,{
-        data: result,
+  function initHot(container, data){
+    return new Handsontable(container,{
+        data: data,
         contextMenu: ["col_right", "remove_col"],
         allowInsertColumn : true,
         allowRemoveColumn : true,
@@ -166,10 +175,13 @@
         },
         afterRemoveCol :function(index, amount){
           colHeadings.splice(index, amount);
+          updateTracery();
         }
        });
-      
-      $(".editableHeader").focusout(function(e){
+  }
+
+  function applyEvents(){
+     $(".editableHeader").focusout(function(e){
         console.log($(this).val());
         colHeadings[lastHeaderEdited] = $(this).val();
         updateTracery();
@@ -181,6 +193,30 @@
         e.preventDefault();
         updateTracery();
       });
+
+      $("#loadTracery").click(function(e){
+        e.preventDefault();
+        importFromTracery(JSON.parse($("#traceryData").val()));
+      });
+  }
+
+  var hot;
+  var colHeadings;
+  var justEditedHeader = false;
+  var lastHeaderEdited;
+  $(document).ready(function(){
+
+      var origData = {"weather":["rain","snow","sleet","frogs","plagues"],"country":["Spain","England"],"verb":["falls","appears","burns"],"adjective":["mainly","primarily","occassionally"],"geographical location":["plain","imagination"]};
+
+      var result = traceryToHot(origData);
+      
+
+     
+      var container = document.getElementById('grid');
+      hot = initHot(container, result);
+      
+      applyEvents();
+      new Clipboard('.btn');
 
     });
 
@@ -206,9 +242,10 @@
       <h3>
         Tracery Data
       </h3>
-      <p>Paste this into <a href="http://cheapbotsdonequick.com/">Cheap Bots Done Quick!</a> to deploy your bot.</p>
+      <p>Hit "Copy" and then paste this JSON into <a href="http://cheapbotsdonequick.com/">Cheap Bots Done Quick!</a> to deploy your bot.</p>
+      <p>Or paste in Tracery JSON for an existing bot and then hit "Load" to edit your bot's data here.</p>
       <button class="btn" data-clipboard-action="copy" data-clipboard-target="#traceryData">Copy</button>
-
+      <button class="btn" id="loadTracery">Load</button>
       <textarea id="traceryData"></textarea>
     </div>
 </div>
