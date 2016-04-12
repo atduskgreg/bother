@@ -155,6 +155,11 @@
           }
          
 
+        },
+        afterRemoveCol :function(index, amount){
+          console.log("remove column: " + index + " columns: " + amount);
+          colHeadings.splice(index, amount);
+          console.log(colHeadings);
         }
        });
 
