@@ -1,6 +1,8 @@
-## Bother - A One-Page Framework for Learning Bot-Making
+## Bother - A Toolkit for Learning Bot-Making
 
 ### Try it [here](http://atduskgreg.github.io/ide.html)
+
+### Also [try the Tracery editor](http://atduskgreg.github.io/tracery.html)
 
 ### Ingredients
 
@@ -9,6 +11,10 @@
 * [yuya-takeyama/Markov-Chain-in-JavaScript](https://github.com/yuya-takeyama/Markov-Chain-in-JavaScript) - Markov chain library
 
 * [Corpora](https://github.com/dariusk/corpora) - A repo with lots of useful lists of words in json format.
+
+* [Tracery](http://github.com/galaxykate/tracery) - a story-grammar generation library for javascript
+
+* [Hands On Table](https://handsontable.com/) - an Excel-like spreadsheet library for javascript
 
 ### Other Tools
 
@@ -35,3 +41,7 @@
 
 ### What are Markov Chains?
 [This blog post](http://blog.codinghorror.com/markov-and-you/) could be helpful!
+
+### License
+
+This project is licensed under [the MIT license](https://github.com/atduskgreg/bother/blob/master/license.txt).
