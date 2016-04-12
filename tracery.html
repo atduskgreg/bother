@@ -124,29 +124,37 @@
       result.push([]);
       
 
-  
+      var justEditedHeader = false;
+      var lastHeaderEdited;
       var container = document.getElementById('grid');
       hot = new Handsontable(container,{
         data: result,
         contextMenu: ["col_right", "remove_col"],
         allowInsertColumn : true,
         allowRemoveColumn : true,
-        colHeaders : colHeadings,
+        manualColumnMove: true,
+        manualColumnResize: true,
         colHeaders: function (index) {
-            var textbox = '<input type="text" value="' + colHeadings[index] + '" />';
+            var textbox = '<input class="editableHeader" type="text" value="' + colHeadings[index] + '" />';
             return textbox;
         },
         afterOnCellMouseDown: function (sender, e) {
             if (e.row === -1) {
 
                 colHeadings[e.col] = $(sender.realTarget).val();
+                console.log($(sender.realTarget).val());
+                console.log(colHeadings);
                 this.getInstance().deselectCell();
                 $("#grid").handsontable('updateSettings', {'colHeaders': colHeadings});
+                justEditedHeader = true;
+                lastHeaderEdited = e.col;
+            }
+            else if(justEditedHeader){
+              console.log($(this.getColHeader(e.col)).val());
+              justEditedHeader = false;
             }
         },
-         manualColumnMove: true,
-         manualColumnResize: true,
-        afterChange : function(){
+        afterChange : function(changes, source){
           if(!this.getSourceData()[this.getSourceData().length - 1].allEmpty()){
             this.alter("insert_row",this.getSourceData().length);
           } 
@@ -157,16 +165,23 @@
 
         },
         afterRemoveCol :function(index, amount){
-          console.log("remove column: " + index + " columns: " + amount);
           colHeadings.splice(index, amount);
-          console.log(colHeadings);
         }
        });
+      
+      $(".editableHeader").focusout(function(e){
+        console.log($(this).val());
+        colHeadings[lastHeaderEdited] = $(this).val();
+        updateTracery();
+      })
+
+      $("#template textarea").focusout(updateTracery);
 
       $("#refresh").click(function(e){
         e.preventDefault();
         updateTracery();
       });
+
     });
 
   </script>
@@ -177,7 +192,7 @@
     <div id="template">
       <h2>Write your template</h2>
       <p id="templateExplain"></p>
-      <textarea>The #weather# in #country# #verb# #adjective# in the #geographical location#.</textarea>
+      <textarea >The #weather# in #country# #verb# #adjective# in the #geographical location#.</textarea>
       <p><em>(Learn all about <a target="_" href="http://www.crystalcodepalace.com/traceryTut.html">Tracery</a>.)</em></p>
       <h3>Output</h3>
       <p id="output"></p> (<a id="refresh" href="#">refresh</a>)
