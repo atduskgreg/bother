@@ -1,8 +1,8 @@
 ## Bother - A Toolkit for Learning Bot-Making
 
-### Try it [here](http://atduskgreg.github.io/ide.html)
+### Try it [here](http://atduskgreg.github.io/bother/ide.html)
 
-### Also [try the Tracery editor](http://atduskgreg.github.io/tracery.html)
+### Also [try the Tracery editor](https://atduskgreg.github.io/bother/tracery.html)
 
 ### Ingredients
 
